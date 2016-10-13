@@ -30,7 +30,7 @@ df <- tbl_df(df)
 The embarked column has some missing values, which are known to correspond to passengers who actually embarked at Southampton. Find the missing values and replace them with S. (Caution: Sometimes a missing value might be read into R as a blank or empty string.)
 
 ```{r results='hide}
-
+#final attempt
 embarked<- df$embarked
 
 #check missing data
@@ -72,9 +72,7 @@ sub("", "S", embarked[n])
 #check Fill operation
 original == length(embarked)
 
-
-any5
-
+#first attempt
 #Find null values and action value replace
 ans1 <- df %>% select(embarked == "") %>% mutate(embarked = "S")
 
