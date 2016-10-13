@@ -1,0 +1,185 @@
+---
+title: "Data Wrangling 2 - Titanic data"
+author: "Ivy Chiang"
+date: "13 October 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+##### Workspace setup and file loading
+
+```{r results='hide'}
+setwd("~/Foundations/3-DataWrangling/3-Ex2")
+ls()
+rm(list=ls())
+library(tidyr)
+library(dplyr)
+
+df <-
+read.csv("titanic_original.csv", stringsAsFactors = FALSE)
+df <- tbl_df(df)
+```
+
+##### 1: Port of embarkation
+
+The embarked column has some missing values, which are known to correspond to passengers who actually embarked at Southampton. Find the missing values and replace them with S. (Caution: Sometimes a missing value might be read into R as a blank or empty string.)
+
+```{r results='hide}
+
+embarked<- df$embarked
+
+#check missing data
+original <- length(df$embarked)
+any(is.na(embarked))
+any(embarked=="")
+
+#Fill missing Data
+embarked_c <-sapply(embarked, function(x){ if (x ==""){x <- "S"}else {str_trim(x)}})
+
+#check Fill operation
+any(embarked_c=="")
+original == length(embarked_c)
+
+#Apply cleaned data to dataset
+ans1<- mutate(df, embarked = embarked_c)
+
+#check
+any(ans1$embarked=="")
+ans1
+
+```
+
+```{r results='hide'}
+#second attempt
+library(stringr)
+
+embarked<- df$embarked
+
+#check missing data
+original <- length(df$embarked)
+any(is.na(embarked))
+any(embarked=="")
+n <- which(embarked=="")
+
+#Fill values
+sub("", "S", embarked[n])
+
+#check Fill operation
+original == length(embarked)
+
+
+any5
+
+#Find null values and action value replace
+ans1 <- df %>% select(embarked == "") %>% mutate(embarked = "S")
+
+#Trim whitespace and find if more null values are found
+library(stringr)
+str_trim(ans1$embarked)
+ans1 %>% filter(embarked == "")
+#no more null values
+
+
+#gsub("[[:space:]]", "", df$embarked)
+#gsub("^\\s+|\\s+$", "", df$embarked)
+
+```
+
+##### 2: Age
+
+You’ll notice that a lot of the values in the Age column are missing. While there are many ways to fill these missing values, using the mean or median of the rest of the values is quite common in such cases.
+1. Calculate the mean of the Age column and use that value to populate the missing values
+2. Think about other ways you could have populated the missing values in the age column. Why would you pick any of those over the mean (or not)?
+
+*Using mean values will not skew the dataset whilst avoid any mathematical calculations errors 
+
+```{r results='hide'}
+#setup variables
+mean_age <- mean(ans1$age)
+original_a <- length(ans1$age)
+
+#Fill missing values with mean
+age <- ans1$age
+age_c <-sapply(age, function(x){ if (x =="" | is.na(x)){x <- mean_age}})
+
+#Join cleaned data to dataset
+ans2 <- mutate(ans1, age = age_c)
+
+#Check
+length(ans2$age) == original_a
+ans2
+
+#Past attempt
+#ans1 %>% filter(age == "") %>% mutate(age = mean(ans1$age))
+
+
+```
+
+##### 3: Lifeboat
+
+You’re interested in looking at the distribution of passengers in different lifeboats, but as we know, many passengers did not make it to a boat :-( This means that there are a lot of missing values in the boat column. Fill these empty slots with a dummy value e.g. the string 'None' or 'NA'
+
+```{r results='hide'}
+#setup variables
+dummy_value <- "None"
+boat <- ans2$boat
+
+#Missing values check
+sum(any(is.na(boat)))
+sum(any(boat == ""))
+
+#Fill missing values with mean
+boat_c <-sapply(boat, function(x){ if (x =="" | is.na(x)){x <- dummy_value}})
+
+#Join cleaned data to dataset
+ans3 <- mutate(ans2, boat = boat_c)
+
+#Check cells maintained and number of missing values
+length(ans3$boat) == length(df$boat)
+sum(any(ans3$boat=="" | is.na(ans3$boat)))
+ans3
+
+```
+
+##### 4: Cabin
+
+You notice that many passengers don’t have a cabin number associated with them.
+
+* Does it make sense to fill missing cabin numbers with a value?
+*Yes, but the filling will be to indicate that no number is recorded so data is more understandable to future readers
+* What does a missing value here mean?
+* the missing value means the data was not captured, these could be stowaways or workers.
+
+You have a hunch that the fact that the cabin number is missing might be a useful indicator of survival. Create a new column has_cabin_number which has 1 if there is a cabin number, and 0 otherwise.
+
+
+```{r results='hide'}
+#checking hypothesis of no cabin value meaning survival
+df %>% 
+  select(survived, cabin) %>% 
+  filter(cabin == "")
+
+#Create list
+new <- unlist(lapply(ans3$cabin, function(x) {if (x =="" | is.na(x)){return (0)}else {return(1)}}))
+
+ans4<- mutate(ans3, has_cabin_number = new )
+
+head(ans4$has_cabin_number, n=10)
+
+```
+
+##### 6: Submit the project on Github
+
+Include your code, the original data as a CSV file titanic_original.csv, and the cleaned up data as a CSV file called titanic_clean.csv.
+
+```{r results='hide'}
+ans6<- as.matrix(ans4)
+write.table(ans6,"titanic_clean.csv", sep=",",row.names = FALSE, qmethod = "double")
+
+
+```
