@@ -31,6 +31,7 @@ The embarked column has some missing values, which are known to correspond to pa
 
 ```{r results='hide}
 #final attempt
+library(stringr)
 embarked<- df$embarked
 
 #check missing data
@@ -176,8 +177,9 @@ head(ans4$has_cabin_number, n=10)
 Include your code, the original data as a CSV file titanic_original.csv, and the cleaned up data as a CSV file called titanic_clean.csv.
 
 ```{r results='hide'}
-ans6<- as.matrix(ans4)
-write.table(ans6,"titanic_clean.csv", sep=",",row.names = FALSE, qmethod = "double")
+ans5<- ans4 %>% mutate(name, name= paste("\"", name ,"\"")) %>%  mutate(home.dest, home.dest= paste("\"", home.dest ,"\""))
+ans6<- as.matrix(ans5)
 
+write.table(ans6,"titanic_clean.csv", sep=",",row.names = FALSE)
 
 ```
